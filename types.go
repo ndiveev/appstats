@@ -115,7 +115,7 @@ func (r rpcStat) Stack() stack {
 
 	frames := make([]*frame, 0, len(lines)/2)
 
-	for i := 0; i+1 < len(lines); i += 2 {
+	for i := 0; i+1 < len(lines); i++ {
 		f := &frame{Call: lines[i]}
 
 		i++
@@ -127,7 +127,7 @@ func (r rpcStat) Stack() stack {
 		}
 
 		f.Location = lines[i][1:cidx]
-		f.Lineno, _ = strconv.Atoi(lines[i][cidx:idx])
+		f.Lineno, _ = strconv.Atoi(lines[i][cidx+1:idx])
 
 		frames = append(frames, f)
 	}
