@@ -463,9 +463,10 @@ function renderChart() {
   var chart = new Gantt();
   {{ range $index, $t := .Record.RPCStats }}
     chart.add_bar('{{$t.Name}}',
-        {{$t.Offset.Seconds}} * 1000, {{$t.Duration.Seconds}} * 1000,
-        0,
-        '{{$t.Duration}}',
+        {{$t.Offset.Seconds}} * 1000,
+        {{$t.Duration.Seconds}} * 1000,
+        {{$t.ExtraDuration.Seconds}} * 1000,
+        {{$t.Duration}},
         'javascript:timelineClickHandler(\'{{$index}}\');');
   {{ end }}
 

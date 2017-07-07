@@ -95,9 +95,6 @@ func header(ctx context.Context) http.Header {
 func override(ctx context.Context, service, method string, in, out proto.Message) error {
 	stats := stats(ctx)
 
-	stats.wg.Add(1)
-	defer stats.wg.Done()
-
 	if service == "__go__" {
 		return appengine.APICall(ctx, service, method, in, out)
 	}
@@ -108,12 +105,20 @@ func override(ctx context.Context, service, method string, in, out proto.Message
 		Start:     time.Now(),
 		Offset:    time.Since(stats.Start),
 		StackData: string(debug.Stack()),
+		Pending:   true,
 	}
+
+	rpcIndex := len(stats.RPCStats)
+	stats.lock.Lock()
+	stats.RPCStats = append(stats.RPCStats, stat)
+	stats.lock.Unlock()
+
 	err := appengine.APICall(ctx, service, method, in, out)
 	stat.Duration = time.Since(stat.Start)
 	stat.In = in.String()
 	stat.Out = out.String()
 	stat.Cost = getCost(out)
+	stat.Pending = false
 
 	if len(stat.In) > ProtoMaxBytes {
 		stat.In = stat.In[:ProtoMaxBytes] + "..."
@@ -123,7 +128,7 @@ func override(ctx context.Context, service, method string, in, out proto.Message
 	}
 
 	stats.lock.Lock()
-	stats.RPCStats = append(stats.RPCStats, stat)
+	stats.RPCStats[rpcIndex] = stat
 	stats.Cost += stat.Cost
 	stats.lock.Unlock()
 	return err
@@ -177,8 +182,13 @@ const bufMaxLen = 1000000
 
 func save(ctx context.Context) {
 	stats := stats(ctx)
-	stats.wg.Wait()
 	stats.Duration = time.Since(stats.Start)
+
+	for i, stat := range stats.RPCStats {
+		if stat.Pending {
+			stats.RPCStats[i].ExtraDuration = time.Since(stat.Start)
+		}
+	}
 
 	var buf_part, buf_full bytes.Buffer
 	full := stats_full{

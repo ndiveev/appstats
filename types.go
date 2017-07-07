@@ -46,7 +46,6 @@ type requestStats struct {
 	RPCStats    []rpcStat
 
 	lock sync.Mutex
-	wg   sync.WaitGroup
 }
 
 type stats_part requestStats
@@ -75,9 +74,11 @@ type rpcStat struct {
 	Start           time.Time
 	Offset          time.Duration
 	Duration        time.Duration
+	ExtraDuration   time.Duration
 	StackData       string
 	In, Out         string
 	Cost            int64
+	Pending         bool
 }
 
 func (r rpcStat) Name() string {
