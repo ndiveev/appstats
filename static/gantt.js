@@ -85,7 +85,7 @@ Gantt.compute_scale = function(highest) {
  * URL of a transparent 1x1 GIF.
  * @type {string}
  */
-Gantt.prototype.PIX = 'stats/static/pix.gif';
+Gantt.prototype.PIX = './static/pix.gif';
 
 
 /**
