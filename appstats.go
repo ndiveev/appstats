@@ -49,6 +49,9 @@ var (
 	// Data after this is truncated.
 	ProtoMaxBytes = 150
 
+	// MemcacheExpiration is the amount of time before recorded data will expire.
+	MemcacheExpiration = 30 * time.Minute
+
 	// Namespace is the memcache namespace under which to store appstats data.
 	Namespace = "__appstats__"
 )
@@ -207,11 +210,13 @@ func save(ctx context.Context) {
 	item_part := &memcache.Item{
 		Key:   stats.PartKey(),
 		Value: buf_part.Bytes(),
+		Expiration: MemcacheExpiration,
 	}
 
 	item_full := &memcache.Item{
 		Key:   stats.FullKey(),
 		Value: buf_full.Bytes(),
+		Expiration: MemcacheExpiration,
 	}
 
 	log.Infof(ctx, "Saved; %s: %s, %s: %s, link: %v",
